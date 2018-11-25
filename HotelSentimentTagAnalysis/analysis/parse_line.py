@@ -33,6 +33,7 @@ class SaUtil:
         keyword_topic_dict = {}
         read_line_list = self.read_file(pkg_resources.resource_filename('HotelSentimentTagAnalysis.resource', 'topic_keyword.txt'))
         for line in read_line_list:
+            # print(line)
             topic, keyword = line.strip().split()
             keyword_topic_dict[keyword.decode('utf8')] = topic.decode('utf8')
         return keyword_topic_dict
@@ -71,6 +72,8 @@ class SaUtil:
         topic_id_dict = {}
         read_line_list = self.read_file(pkg_resources.resource_filename('HotelSentimentTagAnalysis.resource', 'topic_show.txt'))
         for read_line in read_line_list:
+            print('*****'*3)
+            print(read_line)
             ID, tag, topic_word = read_line.strip().split()
             topic_id_dict[topic_word.decode('utf8')+str(tag)] = int(ID)
         return topic_id_dict

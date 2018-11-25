@@ -1,7 +1,7 @@
 # encoding=utf-8
 
 import sys
-
+import json
 import pkg_resources
 
 reload(sys)
@@ -16,9 +16,15 @@ class Bootstrap:
 
     def initAnalyzer(self):
         json = self.sentimentAnalysis.load_json(pkg_resources.resource_filename('HotelSentimentTagAnalysis', self.sentimentAnalysis.CONFIG.get('data', 'json_file')))
+        print "json---\n"
+        # print json.dumps(json1, ensure_ascii=False)
+        # 上面的json数据  通过self.sentimentAnalysis.transform_json 方法 进行转化 并赋值给 self.sentimentAnalysis.keyword_dict
         self.sentimentAnalysis.keyword_dict = self.sentimentAnalysis.transform_json(json)
 
     def analyze(self, line):
+
+        # 比如我想知道 line 的内容
+        print(line)
         return self.sentimentAnalysis.run(line)
 
     def showDemo(self, dict, BlockedTagsStr = ''):
@@ -35,5 +41,8 @@ if __name__ == '__main__':
     bootstrap.initAnalyzer()
 
     resultList = bootstrap.showDemo(bootstrap.analyze(line))
+    print resultList
+    print json.dumps(resultList, ensure_ascii=False)
+    print "*******\n"
     for tuple in resultList:
         print tuple[0] + chr(9) + tuple[1] + chr(9) + tuple[2] + chr(9) + tuple[3]

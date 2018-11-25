@@ -33,6 +33,7 @@ if __name__ == '__main__':
 
     bootstrap = Bootstrap()
     bootstrap.initAnalyzer()
+
     resultList = bootstrap.showDemo(bootstrap.analyze(line))
     for tuple in resultList:
         print tuple[0] + chr(9) + tuple[1] + chr(9) + tuple[2] + chr(9) + tuple[3]
