@@ -72,8 +72,6 @@ class SaUtil:
         topic_id_dict = {}
         read_line_list = self.read_file(pkg_resources.resource_filename('HotelSentimentTagAnalysis.resource', 'topic_show.txt'))
         for read_line in read_line_list:
-            print('*****'*3)
-            print(read_line)
             ID, tag, topic_word = read_line.strip().split()
             topic_id_dict[topic_word.decode('utf8')+str(tag)] = int(ID)
         return topic_id_dict
@@ -90,10 +88,11 @@ class SentimentAnalysis:
         self.run_console = self.CONFIG.getboolean('run_mode', 'run_console')
         self.run_hotel_demo = self.CONFIG.getboolean('run_mode', 'run_hotel_demo')
         self.show_seg = self.CONFIG.getboolean('run_mode', 'show_seg')
-        self.prepare_dict()
-        self.keyword_topic_dict = SaUtil().get_keywords_topic()
-        self.idTopicDict = SaUtil().get_topic_id( )
-        self.columnDelimiter = (chr(44) + chr(9))
+        self.prepare_dict() # 加载词典
+        self.keyword_topic_dict = SaUtil().get_keywords_topic() # top_keywords 转成字典 keywords_topic
+        # topic_word + tag => Id eg: {"地铁0": 48, "地铁1": 122, "老板1": 114, "老板0": 2, "观景0": 7, "观景1": 132,
+        self.idTopicDict = SaUtil().get_topic_id()
+        self.columnDelimiter = (chr(44) + chr(9)) # (',','\t')
 
     def prepare_dict(self):
         """ 加载词典
@@ -263,9 +262,17 @@ class SentimentAnalysis:
         line_sentiment_tag = 0
         target_index = word_list.index(keyword.decode('utf8'))
         first_part = word_list[target_index+1:target_index+threshold]
+        # print('rrrrrr')
+        # print(json.dumps(first_part, ensure_ascii=False))
         start_index = target_index - threshold if target_index - threshold >= 0 else 0
         second_part = word_list[start_index:target_index]
+        # print('sssssss')
+        # print(json.dumps(second_part, ensure_ascii=False))
+
         third_part = word_list[target_index+threshold:target_index+threshold*2]
+        # print('ttttttt')
+        # print(json.dumps(third_part, ensure_ascii=False))
+
         for each_part in [first_part, second_part, third_part, keyword]:
             if not each_part:
                 continue
@@ -281,6 +288,9 @@ class SentimentAnalysis:
             line_sentiment_tag = defaultValue
         topic = self.keyword_topic_dict.get(keyword)
         # result = self.columnDelimiter.join([topic, str(line_sentiment_tag), full_part.strip()])
+
+        # print('000000000000')
+        # print(line_sentiment_tag)
         tagId = self.idTopicDict.get(topic+str(line_sentiment_tag), -1)
         result = [topic, str(line_sentiment_tag), full_part.strip(), writing_content, tagId]
         return result
@@ -302,9 +312,14 @@ class SentimentAnalysis:
         result_list = []
         writing_content = input_line
         comment_part = re.split(r"[ ……。，；！？,.;?!！（）()～~\n\r|、'——]".decode('utf8'), writing_content.decode('utf8'))
+        # print('---ppppppp----')
+        # print(json.dumps(comment_part, ensure_ascii=False))
+        # print('---pppppppddd----')
         for part in comment_part:
             word_list = [x for x in jieba.cut(part, cut_all=False, HMM=False)]
             for keyword in word_list:
+                # print('aaaaaa')
+                # print(keyword)
                 if keyword in self.keyword_dict.keys():
                     further_list = self.further_segment(word_list, keyword)
                     if keyword not in further_list:
@@ -314,6 +329,9 @@ class SentimentAnalysis:
                     result_list.append(('good', part, part, writing_content))
                 elif part in self.neg_sentence:
                     result_list.append(('bad', part, part, writing_content))
+        # print('bbbbbbbbbbbbb')
+        # print(json.dumps(result_list, ensure_ascii=False))
+        # print('ddddddddddddd')
         return result_list
 
     def run(self, line):
@@ -333,6 +351,9 @@ class SentimentAnalysis:
             if topic in ['good', 'bad']:
                 resultDict[topic] = self.add_impression(each_tuple)
 
+        # print('uuuuuuuu')
+        # print(json.dumps(resultDict, ensure_ascii=False))
+        # print('uuuuuuuu')
         return resultDict
 
     def load_json(self, json_file):
@@ -369,16 +390,22 @@ class SentimentAnalysis:
         """ 将json存储为字典
         """
         result_dict = {}
+        # topic_keywords_list eg: "悠闲": ["惬意", "休闲", "发呆", "放松", "宁静"]
         topic_keyword_dict = self.get_topic_keyword(pkg_resources.resource_filename('HotelSentimentTagAnalysis.resource', 'topic_keyword.txt'))
+
         for json_line in json_content:
             for topic_word, keyword_critical_reverse in json_line.items():
                 topic_word = topic_word.encode('utf8')
+                # topic 下对应的 keywords
                 keywords = set(topic_keyword_dict.get(topic_word, []))
+                # 好 差 漂亮
                 critical_word_set = set(keyword_critical_reverse.get('critical_words', []))
                 defaultValue = int(keyword_critical_reverse.get('default', 0))
+
                 for each_keyword in keywords:
                     jieba.suggest_freq(each_keyword, True)
                     result_dict[each_keyword.decode('utf8')] = {'topic_word':topic_word, 'default_value':defaultValue, 'critical_word_set':critical_word_set}
+
         return result_dict
 
 # class Bootstrap():
